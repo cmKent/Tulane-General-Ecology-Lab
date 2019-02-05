@@ -1,0 +1,12 @@
+This folder contains the data for the lab excercises. 
+
+IMPORTANT!!! If you wish to update the data be sure to check the following
+	1) Your new .csv file is formated the same as the old one
+		a) It has identical column names (remember it is case sensetive)
+		b) It does not contain any new columns or is missing past columns
+		c) Data within each column is formated the same way with the same level names. For example:
+			i) If you are updating the spider lab, the spider names must be spelled/formatted the same way as in the orriginal version
+			ii) Likewise for this lab proximity to substrate should be abbreviated c,m,f. Note it is CASE SENSETIVE
+	2) Your new .csv must by titled the same as the old one (remember it is case sensetive)
+	3) IMMEADIETLY after replacing the file, re-run the _Completed.R files to make sure they still work
+	4) You will need to render the R markdown files again to keep them consistent with the data 

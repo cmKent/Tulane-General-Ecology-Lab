@@ -1,0 +1,184 @@
+---
+title: "Spiders and Niche Partitioning"
+author: "Cody M Kent"
+date: "January 15, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Spider Lab Data Analysis
+##Introduction
+
+1) This lab document goes with the provided R script that you will be working with
+2) Before starting this lab you should have already created a csv file with the data that has been cleaned (e.g. outliers removed)
+3) This csv file should be saved in a separate Data folder inside your Ecology Lab project
+4) You should have a file titled SpiderLabScript_Student.R that contains most of the script for today's analysis
+
+##Loading and examining data
+
+First lets load in our data set. We can do this using the `read.csv()` function. After loading it in, use the `head()` `tail()` and `str()` commands to examine the data set. 
+```{r Load and examine the data set,results='hide'}
+Data <- read.csv('Data/Spider_Data.csv')
+head(Data)
+tail(Data)
+str(Data)
+```
+
+Why would you want to use both the `head()` and `tail()` function?
+
+Did the data look like it loaded correctly? If so we can move on to analysis. 
+
+##Cleaing up data
+###Calculate web area
+Now we aren't really interested in web diameter, but instead want to find the web area. How would we do this?
+Some of the formula is provided. Fix the formula so it will compute web area
+
+```{r Calculate web area,eval=F}
+Data$Web.Area<-pi*((InsertHere)/2/2)^2
+```
+
+###Removing uncommon species
+Also, we have several spider species sin the data where we only measured a couple individuals. If we only have a few data points, then we cannot really use them to test statistical hypothesis. We can use the `summary()` function to see how many individuals were sampled for each species. 
+
+```{r find rare sepcies}
+summary(Data$Spider.ID)
+```
+
+As you can see, there are three common species and several other rare ones. Lets use a cutoff of 10 individuals, and we will remove all species for which we sampled fewer than 10 individuals. Keep in mind, what does this removal mean for our study?
+
+```{r remove rare species}
+keep_species<-names(summary(Data$Spider.ID)[summary(Data$Spider.ID)>=10])
+Data<-subset.data.frame(Data,Data$Spider.ID%in%keep_species)
+summary(Data$Spider.ID)
+```
+
+We still have one problem we would like to fix. After running the summary command, you can see that we removed the rare species but the levels still remain, showing zeroes for those species. We can use the `droplevels()` function to drop the empty levels from the factor
+
+```{r relevel species}
+Data$Spider.ID<-droplevels(Data$Spider.ID)
+summary(Data$Spider.ID)
+```
+
+Now that we have the data fully loaded and cleaned, we can begin running the statistical analysis. 
+
+##T-tests
+###Seperating data into different spider species
+For the next step of analysis, it will be easier to create subsets of the data for each species. We can do that by using the `subset()` function
+
+```{r group species}
+GC<-subset.data.frame(Data,Data$Spider.ID=='Gasteracantha cancriformis')
+LV<-subset.data.frame(Data,Data$Spider.ID=='Leucauge venusta')
+NC<-subset.data.frame(Data,Data$Spider.ID=='Nephila clavipes')
+```
+
+###Writing the function
+
+Use the formula provided in your lab manual to complete the t-test function started for you below. The function takes two vectors, one for each of the groups being compared called v1 and v2. You need to complete the parts where you calculate t and df. 
+
+```{r t-test function for display, eval=F}
+TTest<-function(v1,v2){
+  m1<-mean(v1,na.rm=T) #calculate the mean for the first species
+  m2<-mean(v2,na.rm=T) #calculate the mean for the second species
+  s1<-var(v1,na.rm=T) #calculate variance for first speices
+  s2<-var(v2,na.rm=T) #variance for second species
+  n1<-length(v1)-sum(is.na(v1)) #find the number of samples for first species
+    #What does the sum(is.na(v)) part of the equation do?
+  n2<-length(v2)-sum(is.na(v2)) #find the number of samples for second species
+  
+  t<-     #fill in the formula for the t value
+  df<-    #fill in the formula for the degrees of freedom
+  p<-2*pt(t,df,lower.tail=F) #find the p value
+  Results<-data.frame(t,df,p) #organize the results
+  return(Results) #return the results
+}
+```
+
+```{r t-test function for markdown, echo=F}
+  TTest<-function(v1,v2){
+    m1<-mean(v1,na.rm=T) #calcuate the mean for the first species
+    m2<-mean(v2,na.rm=T) #calculating the mean for the second speces
+    s1<-var(v1,na.rm=T) #calculate variance for first speices
+    s2<-var(v2,na.rm=T) #variance for second species
+    n1<-length(v1)-sum(is.na(v1)) #find the number of samples for first species
+      #What does the sum(is.na(v)) part of the equation do?
+    n2<-length(v2)-sum(is.na(v2)) #find the number of samples for second species
+    
+    t<-abs((m1-m2)/(sqrt(s1/n1+s2/n2))) #cacluate the t statisitic)
+    
+    df<-n1+n2-2 #calcualate the degrees of freedom
+    
+    p<-2*pt(t,df,lower.tail=F) #find the p value
+    Results<-data.frame(t,df,p) #organize the results
+    return(Results) #return the results
+}
+```
+
+###Running the test 
+Now we will use the function we wrote to to test if web height differed between Gastrocantha and Luecauge
+
+```{r run the first t-test}
+TTest(GC$Web.Height,LV$Web.Height)
+```
+
+Next, lets run it for the other two species pairs
+
+```{r two more t.tests,eval=F}
+TTest(GC$Web.Height,NC$Web.Height)
+TTest(LV$Web.Height,NC$Web.Height)
+```
+
+###Your assigment
+For your paper, you will need to do several more t-tests. You should do comparisons for all three species pairs for 4 variables in total. Your TA might tell you which variables to use. You should work on doing those caparisons now.
+
+
+##Figures
+For each of your 4 web variables that you did t-tests on you should provide one figure. Here we will make figures using the `boxplot()` function. 
+
+Note how we write the formula for the boxplot,. The measurement we are interested in goes on the left side and the grouping variable on the right.
+Also note how we change the x and y axis labels. All of your figures will need to have appropriate axis labels
+
+```{r figures}
+boxplot(Data$Web.Height~Data$Spider.ID,xlab='Spider speices',ylab='Web height (cm)', cex.axis=0.5)
+```
+
+Now that we did this one together, make the figures for the other 3 variables. 
+For your lab reports, you will copy the figures out of R studio and remember to give them a caption!
+
+##Runing the chi-square test
+The last piece of analysis we will do is a chi-square test. A chi-square test compares frequencies between two categorical variables. What data in this lab could we run a chi-square test on?
+
+First we need to generate a table of observed frequencies. It should have columns that are the different categories and rows that are the different species
+
+```{r expected tables}
+Observed<-table(Data$Spider.ID,Data$Substrate)
+Observed
+```
+
+You may have a column with no title that contains missing data. If so, remove it now
+
+```{r remove blanks}
+Observed<-Observed[,-1]
+Observed
+```
+
+Now we can run the chi-square test. To do this we will use the `chisq.test()` function
+
+```{r Chi-square test}
+Test<-chisq.test(Observed)
+Test
+```
+You may receive a warning about the approximation being incorrect. That is OK for this lab, but it means that some of our sample sizes might have been too small.
+
+###Interpeting the test
+Now that you ran a test and found it to be significant,you need to interpret the results. Remember that on a chi-square test you can't just compare the observed frequencies. Instead, you must compare the observed frequencies to the expected frequencies. We can pull these out of the variable we named "Test."
+
+```{r Chi-square test-interpretation}
+Test$observed
+Test$expected
+```
+
+Notice how the observed values you get here match the ones you calculated before. Now, how do the observed and expected values differ from each other? What is your overall interpretation of these results? 
+

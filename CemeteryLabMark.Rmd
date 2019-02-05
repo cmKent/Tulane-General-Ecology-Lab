@@ -1,0 +1,205 @@
+---
+title: "Cemeteries and Life tables"
+author: "Cody M Kent"
+date: "February 4, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Cemetery Lab Data Analyis
+##Introduction
+
+1) This lab document goes with the provided R script that you will be working with
+2) Before starting this lab you should have already created a csv file containing the demography data you collected. This will be done in class.
+3) This csv file should be saved in a separate Data folder inside your Ecology Lab project and titled "Cemetery_Partial_NOLA_Data.csv"
+4) You should have a second csv file titled Cemetery_Full_NOLA_Data.csv saved in the data folder
+5) You should have a file titled CemeteryScript_Student.R that contains most of the script for today's analysis
+
+##Loading and examining data
+First lets load in our that we collected in lab data file and check it for anything that doesn't make sense. Use the same commands we used before, including `head`, `tail`,`str`, and `summary`.
+
+
+```{r load data}
+Nola<-read.csv('data/Cemetery_Partial_NOLA_Data.csv')
+```
+
+Everything look good? If so, lets move on.
+
+##Organizing Data
+For this lab we will be doing most of the analysis on the different sexes separately. Use the `subset.data.frame()` function to make different data frames for each of the sexes. 
+
+```{r organizing data}
+NolaF<-subset.data.frame(Nola,Nola$Sex=='Female') #grab all of the females
+NolaM<-subset.data.frame(Nola,Nola$Sex=='Male') #and grab all the males
+```
+
+
+##Paramaterize the life tables
+We will now do a series of calculations to find the different values to populate our life tables. The formulas are provided in your lab manual and and an outline is provided here for you to follow. You will have to do it both for females and males.
+
+###nx
+First we will calculate nx, or the number alive at the start of each age group. We will be using a `for` loop here. Make sure you understand how the loop is working. The code is provided for females. 
+
+```{r nx for partial nola framework,eval=F}
+NolaF$nx<-rep(NA) #create an empty placeholder for the data
+NolaF$nx[1]<-sum(NolaF$dx) # the first value is easy
+for(i in 2:(nrow(NolaF))){ #loop over each row
+  NolaF$nx[i]<-NolaF$nx[i-1]-NolaF$dx[i-1] #calculate nx
+}
+
+#now you do it for males
+
+```
+
+```{r nx for partial nola work,echo=F}
+NolaF$nx<-rep(NA) #create an empty placeholder for the data
+NolaF$nx[1]<-sum(NolaF$dx) # the first value is easy
+for(i in 2:(nrow(NolaF))){ #loop over each row
+  NolaF$nx[i]<-NolaF$nx[i-1]-NolaF$dx[i-1] #calculate nx
+}
+
+NolaM$nx<-rep(NA) #create an empty placeholder for the data
+NolaM$nx[1]<-sum(NolaM$dx) # the first value is easy
+for(i in 2:(nrow(NolaM))){ #loop over each row
+  NolaM$nx[i]<-NolaM$nx[i-1]-NolaM$dx[i-1] #calculate nx
+}
+```
+
+###lx and qx
+Next we will calculate sponsorship (lx) and age specific-mortality (qx). A rough framework is provided
+
+```{r lx and qx framework, eval=F}
+NolaF$lx<-  #insert the formula to calculate lx
+NolaM$lx<-
+  
+NolaF$qx<-  #insert the formula for qx
+NolaM$qx<-
+```
+
+```{r lx and qx evalualte, echo=F}
+NolaF$lx<-NolaF$nx/sum(NolaF$dx)  #insert the formula to calculate lx
+NolaM$lx<-NolaM$nx/sum(NolaM$dx)
+  
+NolaF$qx<-NolaF$dx/NolaF$nx  #insert the formula for qx
+NolaM$qx<-NolaM$dx/NolaM$nx
+```
+
+Now lets take a quick look at our life tables to make sure everything looks OK
+```{r examine lifetables, eval=F}
+NolaF
+NolaM
+```
+
+There may be some `NaN`s generated. Why would this happen? Should this cause any problems?
+
+##Generating Curves
+Now that we have a life table, lets make some curves to help visualize the data.
+
+###Survivorship curve
+Here we will graph the survivorship of both sexes across age classes. Note that these graphs are typically log-transformed to identify the type of survivorhsip curve. Yours should look similar to the one below. 
+
+```{r surivalship curves}
+plot(lx~AgeClass,data=NolaM, #plot the data
+     type='o',col='blue', #make it be blue connected points
+     log='y', #log transform the y axis
+     ylab='Survivorship (lx)',xlab='Age class') #change the axis labels
+points(lx~AgeClass,data=NolaF,type='o',col='red') #plot females
+legend('bottomleft',legend=c('Male','Female'),lty=1,pch=1,col=c('blue','red')) #add legend
+```
+
+###Mortality curve
+Now make a similar graph, but this time plot age-class specific mortality (qx). Also, we will not log-transform this graph. This time the code is not provided for you, but it should look similar to the one below
+
+```{r mortality curve, echo=F}
+plot(qx~AgeClass,data=NolaM,type='o',col='blue',xlab='Age class',ylab='Mortality (qx)')
+points(qx~AgeClass,data=NolaF,type='o',col='red')
+legend('topleft',legend=c('Male','Female'),lty=1,pch=1,col=c('blue','red'))
+```
+
+##Statistical tests
+Now lets perform a statistical test to see if the two sexes differ in the number (frequency) of people that died in each age class. To do this we will be using a chi-square test. Remember, a chi-square test compares frequencies two categorical variables.
+
+In this data set we have a lot of age classes. Doing a chi-square test on many categories can be difficult, so first we will combine them into larger categories to perform the test.
+
+To do this we will use a function provided for you called `Rebin()`. This function takes three vectors. The first is a vector of the new categories for the data (NewBin), the second is the old categories for the data (OldBin), and the third is the frequencies from the old data (Freq). In this case, the frequencies we will be using are dx. Make sure you understand how this function works. 
+
+
+```{r organize data for chi-square set up,eval=F}
+#First creat a vector with our new age categories
+Bins<-c(0,20,40,60,199) 
+
+#Next is the function for putting the data into new bins
+ 
+Rebin<-function(NewBin,OldBin,Freq){
+  NewFreq<-rep(NA,length(NewBin)) #create a placehold for the new frequencies
+  for(i in 1:(length(NewBin)-1)){ #loop over each bin of the old data
+    sub<-subset(Freq,OldBin>=NewBin[i] & OldBin<NewBin[i+1]) #decide wheather it gets added
+    NewFreq[i]<-sum(sub) #add the ones that met the rule
+  }
+  return(NewFreq)
+}
+
+#Now, use the function to create a table of observed frequencies
+
+Observed<-data.frame(Female=Rebin(), #fill in the formula to run the fucntion
+                  Male=Rebin())
+rownames(Observed)<-Bins #put on row labels to match the bins
+Observed<-Observed[-5,] #get rid of the extra row
+```
+
+```{r organize data for chi-square run,echo=F}
+#First creat a vector with our new age categories
+Bins<-c(0,20,40,60,199) 
+
+#Next is the function for putting the data into new bins
+ 
+Rebin<-function(NewBin,OldBin,Freq){
+  NewFreq<-rep(NA,length(NewBin)) #create a placehold for the new frequencies
+  for(i in 1:(length(NewBin)-1)){ #loop over each bin of the old data
+    sub<-subset(Freq,OldBin>=NewBin[i] & OldBin<NewBin[i+1]) #decide wheather it gets added
+    NewFreq[i]<-sum(sub) #add the ones that met the rule
+  }
+  return(NewFreq)
+}
+
+#Now, use the function to create a table of observed frequencies
+
+Observed<-data.frame(Female=Rebin(Bins,NolaF$AgeClass,NolaF$dx), 
+                  Male=Rebin(Bins,NolaM$AgeClass,NolaM$dx))
+rownames(Observed)<-Bins
+Observed<-Observed[-5,]
+```
+
+Now that we have an expected table, run a chi-square test using the `chisq.test()` function. If you can't remember how, go look at your old code. 
+
+```{r run chi-square test set up,eval=F}
+Chisq=chisq.test()
+```
+
+```{r run chi-suqre for real, echo=F}
+Chisq=chisq.test(Observed)
+```
+
+Remember to look at both the expected and observed tables when interpreting the results. So, what did you find?
+
+##Your Assigment
+
+You should also have received two other data files. The first is one for the whole cemetery and the second is for a cemetery at a different location. For your paper you will compare the life tables from these two full cemetery data sets.
+
+You will need to include:
+
+1. Four chi-square tests
+  + NOLA males x NOLA females
+  + ____ males x ____ females
+  + ____ males x NOLA males
+  + ____ females x NOLA females
+2. Four figures (curves)
+  + one for each statistical test
+  + Must include at least one sponsorship and 1 mortality curve
+  + Other than that, pick the one that shows what you want to show the best
+
+You should be able to do this analysis by tweaking the code from today. Let me know if you get stuck.  
+    

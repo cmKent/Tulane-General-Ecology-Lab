@@ -1,0 +1,320 @@
+---
+title: "Longleaf Pine Species Diversity"
+author: "Cody M Kent"
+date: "January 24, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Longleaf Pine Data Analyis
+##Introduction
+
+1) This lab document goes with the provided R script that you will be working with
+2) Before starting this lab you should have already created a csv file with the data that has been cleaned (e.g. outliers removed)
+3) This csv file should be saved in a separate Data folder inside your Ecology Lab project
+4) You should have a file titled LongleafpineScript_Student.R that contains most of the script for today's analysis
+
+##Loading and examining data
+First lets load in our data file and check it for anything that doesn't make sense. Use the same commands we used last week to check out the data set, reminding yourself what each one does. Does everything look ok?
+
+```{r Load Data, results='hide'}
+Data<-read.csv('Data/Longleaf_Data.csv') #load in the data
+head(Data) #look at the first few rows
+tail(Data) #look at the last few rows
+str(Data) #look at the structure of the data
+summary(Data) #look at the summaries of each column
+```
+
+Lets check ourselves quick.
+
+1) Look at each of these outputs?
+2) Does everything look right?
+3) Do you Understand what is in each row and where the data came from?
+
+##Organizing Data
+For lab today, we will mostly be doing separate analysis on the two habitats. To make this simpler, lets divide the data into two groups, one for each habitat, using the subset function. The code for Longleaf pine is provided, you will need to add some code for Bayhead swamp.
+
+```{r deviding data, eval=F}
+LL<-subset.data.frame(Data,Data$Habitat=='LL') #create a subset of data for Longleaf pine
+BH<-  #Enter code here
+```
+```{r actually devide data, echo=F}
+LL<-subset.data.frame(Data,Data$Habitat=='LL') #create a subset of data for Longleaf pine
+BH<-subset.data.frame(Data,Data$Habitat=='BH') #Enter code here
+```
+
+##Preston Plots
+One way to understand species diversity patterns is with Preston plots. Read in your lab manual what a Preston plot is and think about how you would make one.
+
+###Create bins
+As you should see, a Preston plot is basically a histogram with abundance categories on a log axis. Lets start with creating a vector of our abundance categories
+
+```{r making abundance categories}
+Bins<-c(0,1,2,4,8,16,32,64,128,256,512,1024,2048) # a vector containing our abundance categories
+```
+
+###Create data frame to hold data 
+Next, for each of the sites we need to calculate how many species fall into each bin. Lets begin with generating an empty data frame to put the data in
+
+```{r empty abudance data frame}
+PrestonData<-data.frame(Min=Bins[-length(Bins)],Max=Bins[-1]) #Create a data frame with mins and maxes from the bins above
+PrestonData$LL<-rep(NA) #Add some empty data for the Longleaf pine habitat
+PrestonData$BH<-rep(NA)#Add some emtpy data for the Bayhead swamp habitat
+PrestonData$Name<-paste(PrestonData$Min,PrestonData$Max,sep='-') #Add a name for each bin
+PrestonData
+```
+
+Look at the data frame we created and make sure you understand it. Next, think about how we can fill in those missing numbers. Here we are going to write a function to count the number of species that belong in each bin. The function is written for you, but make sure you understand how it is working
+
+```{r function for preston abundances}
+count.bin<-function(X,Min,Max){
+  Number<-sum(X>Min & X<Max) #Count the number of cases where X is greater than the min and less than the max
+  Number<-Number+sum(X==Min)/2 #Add in the number of cases where X is equal to the minimum devided by two
+  Number<-Number+sum(X==Max)/2 #do the same thing for X equals the maximum
+  return(Number) #return the total number
+}
+```
+
+Now, lets use this function to populate the data frame. We are going to use something called a for loop for this. Basically what we are doing is going through each row and calculating the number of species that belong in that bin.
+
+```{r populate preston abudnaces}
+for(r in 1:nrow(PrestonData)){
+  #calculate the number of species in the bin for each row (r) of the data frame
+  PrestonData$LL[r]<-count.bin(X=LL$Count,Min=PrestonData$Min[r],Max = PrestonData$Max[r]) 
+  PrestonData$BH[r]<-count.bin(X=BH$Count,Min=PrestonData$Min[r],Max = PrestonData$Max[r]) #do the same for Bayhead swamp
+}
+PrestonData
+
+```
+
+Check the output. Does this data table look how you expected it to? If so, we can go on to generate the graphs.
+
+###Making the figure
+To do this we will be using the `barplot()` function. The final output should look something like the figure below. 
+
+```{r make the preston plots}
+#Here we make a barplot for the Lonleaf data. Lets break down each step
+barplot(height=rbind(PrestonData$LL,PrestonData$BH), #The heights of the bars come form the PrestonData LL and BH columns
+        names.arg=PrestonData$Name, #The names for the x axis lables come form PrestonData$Names
+        col=c('Blue','Red'), #Set the colors for the bars
+        las=2, #Rotate the x axis labels vertically
+        beside=T, #place the bars beside eachother (default is stacked)
+        xlab='Abundance',#add the x axis name
+        ylab='Number of species') #add the y axis name
+legend('topright',legend=c('Longleaf pine','Bayhead swamp'),fill=c('Blue','Red')) #make a legend for the graph
+```
+
+How would you interpret this graph you have made?
+
+##Species Accumulation Curves
+Another way to understand species diversity patterns is with species accumulation curves. Read in your lab manual what a Preston plot is and think about how you would make one.
+
+Before starting, think to yourself about how you could make a species accumulation curve from our data.
+
+###Create a data frame
+We are going to start this the same way we did the Preston plots, by creating a data frame to hold our data.
+
+```{r Make an empty data frame}
+AccumData<-data.frame(
+  #Lets make a column called group that goes from group 1 to the number of groups we have
+  Group=seq(from=1,to=max(max(BH$Group,LL$Group)),by=1), 
+  LL=rep(NA),BH=rep(NA)) #put in placeholders for LL and BH
+AccumData
+```
+
+Look at this data frame you created. Does it make sense?
+Now, how would you calculate the values that go into each cell?
+
+```{r Fill in data frame}
+for(r in 1:nrow(AccumData)){
+  #for each row, the value is the number of groups that are equal to or less than the group of intrest
+  AccumData$LL[r]<-sum(LL$Group<=AccumData$Group[r])
+  AccumData$BH[r]<-sum(BH$Group<=AccumData$Group[r]) #do it agaoin for Bayhead swamp
+}
+```
+
+Look at the data frame now to make sure it looks right.
+
+###Making the figure
+Now lets make the plot. Here we can just use the `plot()` function to make an empty plot and then the `points()` function to add in the data from the two habitats. 
+
+```{r Make accumulaiton curve, eval=F}
+#first we will make an empty plot
+plot(y=c(0,max(c(AccumData$LL,AccumData$BH))), #the y axis should go from 0 to the largest value
+     x=c(1,max(AccumData$Group)), #the x axis should go form 1 to the largest value
+     type='n', #tell R not to actually plot anything
+     ylab='Number of species',xlab='Number of groups') #set x and y axis labels
+#now we will ad the points for Longleaf pine
+points(LL~Group, #Plot the data from LL against the group number
+       data=AccumData, #tell R where to get the data
+       type='o',# Make it be points connected by lines
+       pch=16,col='blue') #set the shape (pch) and collor
+```
+
+Now use the `points()` function to add the data from Bayhead swamp to the same graph. Also, use the `legend()` function to add an appropriate legend. You should end up with a plot similar to the one below. Hint, you will have to use the `lty=` and `pch=` arguments in `legend()`.
+
+```{r actually make the accumulaiton plot, echo=F}
+#first we will make an empty plot
+plot(y=c(0,max(c(AccumData$LL,AccumData$BH))), #the y axis should go from 0 to the largest value
+     x=c(1,max(AccumData$Group)), #the x axis should go form 1 to the largest value
+     type='n', #tell R not to actually plot anything
+     ylab='Number of species',xlab='Number of groups') #set x and y axis labels
+#now we will ad the points for Longleaf pine
+points(LL~Group, #Plot the data from LL against the group number
+       data=AccumData, #tell R where to get the data
+       type='o',# Make it be points connected by lines
+       pch=16,col='blue') #set the shape (pch) and collor
+points(BH~Group, #Plot the data from LL against the group number
+       data=AccumData, #tell R where to get the data
+       type='o',# Make it be points connected by lines
+       pch=16,col='red') #set the shape (pch) and collor
+legend('topleft',legend=c('Longleaf pine','Bayhead swamp'),lty=1,col=c('blue','red'),pch=16)
+```
+
+How can you interpret the figure you made?
+
+##Shannon's Diversity
+We will now calculate Shannon's diversity, one common metric of species diversity
+
+Shannon's diversity will be based off of a series of calculations provided in the lab manual. A framework for doing the calculations is provided, but you will need to fill them in. 
+
+###Calculate pi
+You will start with calculating p for each morphospecies in each habitat
+
+```{r set up pi,eval=F}
+LL_pi<- #calulate p(i) for each species (i)
+BH_pi<- #do the same for Bayhead swamp
+```
+
+```{r do the math for pi ,echo=F}
+LL_pi<-LL$Count/sum(LL$Count)
+BH_pi=BH$Count/sum(BH$Count)
+```
+
+###Calculate Shannon's Diversity
+Next you will calculate Shannon's diversity (H') for each habitat
+
+```{r set up H, eval=F }
+LL_H<- #calculate Shannon's diversity for LL
+BH_H<- #do the same for Bayhead swamp
+LL_H
+BH_H
+```
+
+```{r calcualte H, echo=F}
+LL_H<-sum(LL_pi*log(LL_pi))*-1 #calculate Shannon's diversity for LL
+BH_H<-sum(BH_pi*log(BH_pi))*-1 #do the same for Bayhead swamp
+```
+Which habitat was more diverse?
+
+###Calculate Eveness
+Shannon's diversity also comes with an evenness score. Calculate that next
+
+```{r set up shannons E, eval=F }
+LL_E<- #calculate Shannon's evenness for LL
+BH_E<- #do the same for Bayhead swamp
+LL_E
+BH_E
+```
+
+```{r calcualte Shannons E, echo=F}
+LL_E<-LL_H/log(nrow(LL)) #calculate Shannon's eveness for LL
+BH_E<-BH_H/log(nrow(BH)) #do the same for Bayhead swamp
+```
+Which habitat was more even?
+
+###Perform t-test
+Next, as you see in your lab manual, we are going to test if these habitats differ in diversity using a modified t-test. Like any t-test you will have to calculate a few different things. First, lets calculate the variance for each habitat.
+
+```{r set up varaince, eval=F }
+LL_v<- #calculate variance for LL
+BH_v<- #do the same for Bayhead swamp
+LL_v
+BH_v
+```
+
+```{r calcualte variance, echo=F}
+LL_v<-((sum(LL_pi*(log(LL_pi)^2))-(sum(LL_pi*log(LL_pi))^2))/sum(LL$Count))-((nrow(LL)-1)/(2*(sum(LL$Count)^2))) #calculate variance for LL
+BH_v<-((sum(BH_pi*(log(BH_pi)^2))-(sum(BH_pi*log(BH_pi))^2))/sum(BH$Count))-((nrow(BH)-1)/(2*(sum(BH$Count)^2))) #do the same for Bayhead swamp
+```
+
+Next calculate the t value.
+```{r set up t, eval=F }
+t<-abs() #calculate t
+t
+```
+
+```{r calcualte t, echo=F}
+t<-abs(LL_H-BH_H)/(LL_v+BH_v)^(1/2)
+```
+
+Next lets calculate the degrees of freedom
+```{r set up df, eval=F }
+df<- #calculate df
+df
+```
+
+```{r calcualte df, echo=F}
+df<-((LL_v+BH_v)^2)/(LL_v^2/sum(LL$Count)+BH_v^2/sum(BH$Count))
+```
+
+Lastly, lets calculate a p-value. The forumal as been provided to you and is the same as we used in the last lab.
+
+```{r calculate p}
+p<-2*pt(t,df,lower.tail=F)
+```
+
+How would you interpret these results?
+
+##Simpson's diversity
+A second way to compare species diversity is with Simpson's index. Use your lab manual and r script as a guide to calculate these values
+
+Fist, lets calculate the values N and n for each habitat
+```{r set up N and n, eval=F}
+LL_N<- #calculate N for Longleaf pine 
+LL_n<- #calculate n for Longleaf pine
+BH_N<- #do the same for Bayhead swamp
+BH_n<-
+```
+
+```{r calculate N and n, echo=F}
+LL_N<-sum(LL$Count)
+LL_n<-LL$Count
+BH_N<-sum(BH$Count)
+BH_n<-BH$Count
+```
+
+Now use these numbers to calculate Simpson's diversity (Ds) for each habitat.
+
+```{r set up DS, eval=F}
+LL_Ds<- #calculate Ds for Longleaf pine 
+BH_Ds<- #do the same for Bayhead swamp
+LL_Ds
+BH_Ds
+```
+
+```{r calculate DS, echo=F}
+LL_Ds<-(LL_N*(LL_N-1))/sum(LL_n*(LL_n-1)) #calculate Ds for Longleaf pine 
+BH_Ds<-(BH_N*(BH_N-1))/sum(BH_n*(BH_n-1)) #do the same for Bayhead swamp
+```
+
+How would you interpret these results?
+
+Simpson's index also comes with an evenness score. Calculate that (Ed)
+
+```{r set up Ed, eval=F}
+LL_Ed<- #calculate Ed for Longleaf pine 
+BH_Ed<- #do the same for Bayhead swamp
+LL_Ed
+BH_Ed
+```
+
+```{r calculate Ed, echo=F}
+LL_Ed<-LL_Ds/nrow(LL) #calculate Ed for Longleaf pine 
+BH_Ed<-BH_Ds/nrow(BH) #do the same for Bayhead swamp
+```
+
+We won't be doing a t-test for Simpson's diversity, so your done with calculations. How would you interpret these results?

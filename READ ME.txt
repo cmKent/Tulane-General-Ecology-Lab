@@ -1,0 +1,34 @@
+This folder contains scripts, data, and R markdown folders for the Tulane General Ecology labs. These labs will not make sense without the lab manual.
+Plese be careful if you replace any of the files. See IMPORTANT!! below for details. 
+
+Description of Files:
+	For each lab there are 5 files. These include: 
+		1) An .html file for the lab to provide instruction for students generated from R markdown 
+		2) A .Rmd file that contains the code to generate these .html files
+		3) A _Student.R file that contains an outline of the code for students to complete
+		4) A _Completed.R file that contains the completed code for the instructor
+		5) A .csv file inside the Data folder containing the data for each lab.
+	There is a .Rproj file containg the project
+	There is a folder called Data containing the data for each lab (file 5 above).
+
+IMPORTANT!! Please note that files can be replaced with updated versions, but you MUST keep the same file names file formats and tile types so everything will continue to work.
+	*That means that if you wish to change the data for the current year, you must title the new data file and format it the same way as the one in this folder!!!!
+	*That includes using the same headings in excel when making the csv!!!
+	!!!IF YOU DO NOT FOLLOW THESE INSTRUCUTIONS YOU WILL BREAK THE CODE!!!
+	*See the READ ME file in the Data folder for more details before doing this!
+	*Immeadietly after replacing the file, run the _Completed.R scripts to make sure they still work and you didn't break anything
+	*You can then re-render the .Rmd files to match with the current data. 
+	* If you make any changes to the .Rmd file or either .R file for a lab, make sure to update the other two files as well to keep them consistent with eachother.
+
+Notes on teaching:
+	It is intended that when this lab is taught the instructor should help the students make their own project and folder that mirrors this one
+	However, unlike this one, the student will not recieve the .Rmd files or the _Completed.R.
+	To do this, have students do the following:
+		1) Open R studio and create a new project titled "Ecology Lab" 
+			They should save this project in a new folder titled "Ecology Lab_R"
+			Students can save this folder wherever they want as long as they will know how to find it
+		2) Open up their new folder called "Ecology Lab_R" and create another new folder called "Data"
+			In this folder students should save thier .csv files as they recieve them
+		3) Sutdents should also save their _Student.R files and .html files in thie Ecology Lab_R folder as they recieve them
+
+Version Note: Everything ran properly as of 1/24/2019 using R version 3.5.1 (2018-07-02) -- "Feather Spray" 
