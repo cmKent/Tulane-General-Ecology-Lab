@@ -88,7 +88,7 @@ NolaM$qx<-NolaM$dx/NolaM$nx
 ```
 
 Now lets take a quick look at our life tables to make sure everything looks OK
-```{r examine lifetables, eval=F}
+```{r examine life tables, eval=F}
 NolaF
 NolaM
 ```
