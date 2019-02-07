@@ -37,7 +37,7 @@ NolaM
 #Suvivorship curve
 plot(lx~AgeClass,data=NolaM, #plot the data
      type='o',col='blue', #make it be blue connected points
-     log='y', #log transform the y axis
+     ylim=c(0.01,1),log='y', #log transform the y axis
      ylab='Survivalship (lx)',xlab='Age class') #change the axis labels
 points(lx~AgeClass,data=NolaF,type='o',col='red') #plot females
 legend('bottomleft',legend=c('Male','Female'),lty=1,pch=1,col=c('blue','red')) #add legend
