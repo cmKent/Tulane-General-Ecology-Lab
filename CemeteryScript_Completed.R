@@ -71,4 +71,4 @@ rownames(Observed)<-Bins
 Observed<-Observed[-5,]
 
 #now run the test
-Chisq=chisq.test(Observed)
+Chisq<-chisq.test(Observed)

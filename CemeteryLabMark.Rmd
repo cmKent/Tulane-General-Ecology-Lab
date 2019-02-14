@@ -176,11 +176,11 @@ Observed<-Observed[-5,]
 Now that we have an expected table, run a chi-square test using the `chisq.test()` function. If you can't remember how, go look at your old code. 
 
 ```{r run chi-square test set up,eval=F}
-Chisq=chisq.test()
+Chisq<-chisq.test()
 ```
 
 ```{r run chi-suqre for real, echo=F}
-Chisq=chisq.test(Observed)
+Chisq<-chisq.test(Observed)
 ```
 
 Remember to look at both the expected and observed tables when interpreting the results. So, what did you find?

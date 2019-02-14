@@ -70,7 +70,7 @@ rownames(Observed)<-Bins #put on row labels to match the bins
 Observed<-Observed[-5,] #get rid of the extra row
 
 #Now run the test
-Chisq=chisq.test()
+Chisq<-chisq.test()
 
 
 
