@@ -29,162 +29,124 @@ Data<-  #load in the data
 Data<-read.csv('Data/FlockingAndForaging_Data.csv') #use the read.csv() file to load in the data
 ```
 
-What structure is the data in (i.e. numeric, factor, logical)? Why is it like this, and how might it cause us some problems in the future?
+What structure is the data in (i.e. numeric, factor, logical)?
 
-If everything looks good then lets go ahead and organize the data. For our analyisis today we will want to have all of the data seperated by trial number. To do this use the `subset.data.frame()` function. Don't worry about trial 5. We won't be analyzing it today. The R I have placed infront of each object is just to denote that this is the raw data, as opposed to the summary data we wil calculate in the next step 
 
-```{r devide by trial 1, eval=FALSE}
-RTrial1<-
-RTrial2<-
-RTrial3<-
-RTrial4<-
-```
-
-```{r devide by trial 2, echo=FALSE}
-RTrial1<-subset.data.frame(Data,Data$Trial==1)
-RTrial2<-subset.data.frame(Data,Data$Trial==2)
-RTrial3<-subset.data.frame(Data,Data$Trial==3)
-RTrial4<-subset.data.frame(Data,Data$Trial==4)
-```
-
-We also don't need the first two columns of data (Lab and Trail) any more, so lets get rid of them
-
-```{r remove extra columns}
-RTrial1<-RTrial1[,-c(1:2)] #remove first two columns
-RTrial2<-RTrial2[,-c(1:2)]
-RTrial3<-RTrial3[,-c(1:2)]
-RTrial4<-RTrial4[,-c(1:2)]
-```
-
-Now remember that these are currently factors. We can't do things like calculate means with factors, for that we need numeric data. To do that, we will need to coerce this data into numeric. However, we also need to be able to tell who was killed by a hawk, so we will also keep these first data frames for that analysis. The code here is a bit ugly, so take some time now to break it down until you understand what is going on
-
-```{r change to numeric}
-RTrial1N<-as.data.frame(matrix(nrow=nrow(RTrial1),ncol=ncol(RTrial1),data=as.numeric(as.matrix(RTrial1))));colnames(RTrial1N)<-names(RTrial1)
-RTrial2N<-as.data.frame(matrix(nrow=nrow(RTrial2),ncol=ncol(RTrial2),data=as.numeric(as.matrix(RTrial2))));colnames(RTrial2N)<-names(RTrial2)
-RTrial3N<-as.data.frame(matrix(nrow=nrow(RTrial3),ncol=ncol(RTrial3),data=as.numeric(as.matrix(RTrial3))));colnames(RTrial3N)<-names(RTrial3)
-RTrial4N<-as.data.frame(matrix(nrow=nrow(RTrial4),ncol=ncol(RTrial4),data=as.numeric(as.matrix(RTrial4))));colnames(RTrial4N)<-names(RTrial4)
-```
 ##Calculating summary statistics
 
-Next we will calculate a series of summary statistics for each day of each trial. The statsitcs you need to calculate are as follows: Mean time, standard deviation, total number of individuals, number starved, number depredated, number survived, percent starved, and percent killed. The code to do this for trial 1 is outlined for you. You will need to repeat it for the other three trials before moving on. 
+Next we will calculate a series of summary statistics for each day of each trial. First we will find the average foraging time and its standard deviation, the total number of individuals participating, and the number starved or killed. To calculate the first round of these we will use something called piping. Here we will use to packages `dplyr` and `tidyr`. The special operation `%>%` tells R that we are going to pipe. Take some time to understand how this code works.
 
-First, we will calculate several of these values using our numeric data frames
+
 ```{r summary stats 1, eval=FALSE}
-Trial1<-data.frame(MeanTime=apply(RTrial1N,2,mean,na.rm=T)) #This line will calculate the mean foraging time accross each column
-#use the same format as above to calculate the standard deviation.
-Trial1$SD<-sqrt(apply())   # remember standard deviation in the sqrt() of the var()
-Trial1$N<-nrow() #finish the line to calculate the number of individuals
+library(tidyr);library(dplyr) #load in the packages we need to pipe
+SummaryData<-Data %>% #make an object called SummaryData by using the object Data
+  group_by(Trial,Day) %>% #group data by day, within trial
+  summarise(MeanForagingTime=mean(ForagingTime,na.rm=T), #cacluate the average foraging time
+            StandardDeviation=sqrt(var(ForagingTime,na.rm=T)), #standard deviation of foraging time
+            N=length(unique(Group)), #number of individuals
+            NStarved=sum(CauseOfDeath=='s'), #number starved
+            NDepredated=sum(CauseOfDeath=='h' | CauseOfDeath=='g')) #number depredated
+SummaryData<-as.data.frame(SummaryData) #Turn back into a data frame
 ```
 
-The next couple summary statistics we will get from our factor data frames
-```{r summary stats 2,eval=F}
-Trial1$NStarved<-colSums(RTrial1==60) #calculate the number in each column that equaled 60
-Trial1$NDepredated<-   #Use the same format to calcualte number depredated
+Now you also need to calculate the number survived, percent starved, percent depredated, and percent survived. 
+
+```{r summary stats 2, eval=F}
+SummaryData$NSurvived<-
+SummaryData$PStarved<-
+SummaryData$PDepredated<-
+SummaryData$PSurvived<-
 ```
 
-Finally, the last few summary stats we will calculate from some of the columns we have already created in `Trial1`
-```{r summary stats 3,eval=F}
-Trial1$NSurvived<- #use the colmuns of Trial 1 we already calculated 
-Trial1$PStarved<- #caluclate percent starved
-Trial1$PDepredated<- #caluclate percent starved
-Trial1$PSurvived<-  #caclulate percent survived
+```{r summary stats for real, echo=FALSE}
+library(tidyr);library(dplyr)
+SummaryData<-Data %>%
+  group_by(Trial,Day) %>%
+  summarise(MeanForagingTime=mean(ForagingTime,na.rm=T),
+            StandardDeviation=sqrt(var(ForagingTime,na.rm=T)),
+            N=length(unique(Group)),
+            NStarved=sum(CauseOfDeath=='s'),
+            NDepredated=sum(CauseOfDeath=='h' | CauseOfDeath=='g'))
+SummaryData$NSurvived<-SummaryData$N-SummaryData$NStarved-SummaryData$NDepredated
+SummaryData$PStarved<-SummaryData$NStarved/SummaryData$N
+SummaryData$PDepredated<-SummaryData$NDepredated/SummaryData$N
+SummaryData$PSurvived<-SummaryData$NSurvived/SummaryData$N
+SummaryData<-as.data.frame(SummaryData)
 ```
 
-```{r summary stats final, echo=FALSE}
-Trial1<-data.frame(MeanTime=apply(RTrial1N,2,mean,na.rm=T)) #This line will calculate the mean foraging time accross each column
-#use the same format as above to calculate the standard deviation
-Trial1$SD<-sqrt(apply(RTrial1N,2,var,na.rm=T))   # remember standard deviation in the sqrt() of the var()
-Trial1$N<-nrow(RTrial1N) #finish the line to calculate the number of individuals
-#for the other calculations we need to use the first data set that had factors
-Trial1$NStarved<-colSums(RTrial1=='60') #calculate the number in each column that equaled 60
-Trial1$NDepredated<-colSums(RTrial1=='h')   #Use the same format to calcualte number depredated
-#use the colmuns of Trial 1 we already calculated to get the next few
-Trial1$NSurvived<-Trial1$N-Trial1$NStarved-Trial1$NDepredated #use the colmuns of Trial 1 we already calculated 
-Trial1$PStarved<-Trial1$NStarved/Trial1$N #caluclate percent starved
-Trial1$PDepredated<-Trial1$NDepredated/Trial1$N #caluclate percent starved
-Trial1$PSurvived<-Trial1$NSurvived/Trial1$N #caclulate percent survived
-```
-
-Now make sure to take a look at your data frame you have now made using `summary()` and `str()` to make sure it looks correct. Assuming it does, repeat the calculaions for the other three trials. 
-```{r summary stats other trials, echo=FALSE}
-Trial2<-data.frame(MeanTime=apply(RTrial2N,2,mean,na.rm=T)) #This line will calculate the mean foraging time accross each column
-#use the same format as above to calculate the standard deviation
-Trial2$SD<-sqrt(apply(RTrial2N,2,var,na.rm=T))   # remember standard deviation in the sqrt() of the var()
-Trial2$N<-nrow(RTrial2N) #finish the line to calculate the number of individuals
-#for the other calculations we need to use the first data set that had factors
-Trial2$NStarved<-colSums(RTrial2=='60') #calculate the number in each column that equaled 60
-Trial2$NDepredated<-colSums(RTrial2=='h')   #Use the same format to calcualte number depredated
-#use the colmuns of Trial 2 we already calculated to get the next few
-Trial2$NSurvived<-Trial2$N-Trial2$NStarved-Trial2$NDepredated #use the colmuns of Trial 2 we already calculated 
-Trial2$PStarved<-Trial2$NStarved/Trial2$N #caluclate percent starved
-Trial2$PDepredated<-Trial2$NDepredated/Trial2$N #caluclate percent starved
-Trial2$PSurvived<-Trial2$NSurvived/Trial2$N #caclulate percent survived
-
-Trial3<-data.frame(MeanTime=apply(RTrial3N,2,mean,na.rm=T)) #This line will calculate the mean foraging time accross each column
-#use the same format as above to calculate the standard deviation
-Trial3$SD<-sqrt(apply(RTrial3N,2,var,na.rm=T))   # remember standard deviation in the sqrt() of the var()
-Trial3$N<-nrow(RTrial3N) #finish the line to calculate the number of individuals
-#for the other calculations we need to use the first data set that had factors
-Trial3$NStarved<-colSums(RTrial3=='60') #calculate the number in each column that equaled 60
-Trial3$NDepredated<-colSums(RTrial3=='h')   #Use the same format to calcualte number depredated
-#use the colmuns of Trial 3 we already calculated to get the next few
-Trial3$NSurvived<-Trial3$N-Trial3$NStarved-Trial3$NDepredated #use the colmuns of Trial 3 we already calculated 
-Trial3$PStarved<-Trial3$NStarved/Trial3$N #caluclate percent starved
-Trial3$PDepredated<-Trial3$NDepredated/Trial3$N #caluclate percent starved
-Trial3$PSurvived<-Trial3$NSurvived/Trial3$N #caclulate percent survived
-
-Trial4<-data.frame(MeanTime=apply(RTrial4N,2,mean,na.rm=T)) #This line will calculate the mean foraging time accross each column
-#use the same format as above to calculate the standard deviation
-Trial4$SD<-sqrt(apply(RTrial4N,2,var,na.rm=T))   # remember standard deviation in the sqrt() of the var()
-Trial4$N<-nrow(RTrial4N) #finish the line to calculate the number of individuals
-#for the other calculations we need to use the first data set that had factors
-Trial4$NStarved<-colSums(RTrial4=='60') #calculate the number in each column that equaled 60
-Trial4$NDepredated<-colSums(RTrial4=='h')   #Use the same format to calcualte number depredated
-#use the colmuns of Trial 4 we already calculated to get the next few
-Trial4$NSurvived<-Trial4$N-Trial4$NStarved-Trial4$NDepredated #use the colmuns of Trial 4 we already calculated 
-Trial4$PStarved<-Trial4$NStarved/Trial4$N #caluclate percent starved
-Trial4$PDepredated<-Trial4$NDepredated/Trial4$N #caluclate percent starved
-Trial4$PSurvived<-Trial4$NSurvived/Trial4$N #caclulate percent survived
-```
-
-##Bin data into periods
-As we have discussed before, it is often hard to seperate understand statics like chi-square or t-test results if you have too many categories. To help with this, we will only be using three days: one early (Day 3), one in the middle (Day 10), and one at the end (Day 17)
+Now make sure to take a look at your data frame you have now made using `summary()` and `str()` to make sure it looks correct.
 
 
-Now use this function to change each trial into a properly binned version.
+##Organizing the data
+###Limmiting the days of the data
+As we have discussed before, it is often hard to separate understand statics like chi-square or t-test results if you have too many categories. To help with this, we will only be using three days: one early (Day 3), one in the middle (Day 10), and one at the end (Day 17)
+
+To accomplish this, subset the data frame using the `subset.data.frame()` function to limit the data to only these days. Remember that when writing logical statements, `==` means equal to and the `|` symbol means "or."
+
 ```{r bin trials 1,eval=F}
+SummaryData<-subset.data.frame()
 
-#Grab only the days you need
-Trial1<-Trial1[]
-Trial2<-
-Trial3<-
-Trial4<-
-  
-#Also, lets add a 
-Trial1$Day=c(3,10,17)
-Trial2$Day=c(3,10,17)
-Trial3$Day=c(3,10,17)
-Trial4$Day=c(3,10,17)
 ```
 
 ```{r bin trials 2,echo=F}
 
-#Now use the function to do the calculations for each trial.
-Trial1<-Trial1[c(3,10,17),]
-Trial2<-Trial2[c(3,10,17),]
-Trial3<-Trial3[c(3,10,17),]
-Trial4<-Trial4[c(3,10,17),]
-#Also, lets add a 
-Trial1$Day=c(3,10,17)
-Trial2$Day=c(3,10,17)
-Trial3$Day=c(3,10,17)
-Trial4$Day=c(3,10,17)
+SummaryData<-subset.data.frame(SummaryData,SummaryData$Day==3 | SummaryData$Day==10 |SummaryData$Day==17)
+
 ```
 
 Make sure to look at each trial and be sure it still look good and make sense. If they do, we can move on.
 
+###Creating individual trials
+Next we will make a separate data frame for each trial. Here we will also use the `subset.data.frame` function. 
+```{r subset trials 1,eval=F}
+Trial1<-
+Trial2<-
+Trial3<-
+Trial4<-
+```
+
+```{r subset trials 2,echo=F}
+Trial1<-subset.data.frame(SummaryData,SummaryData$Trial==1)
+Trial2<-subset.data.frame(SummaryData,SummaryData$Trial==2)
+Trial3<-subset.data.frame(SummaryData,SummaryData$Trial==3)
+Trial4<-subset.data.frame(SummaryData,SummaryData$Trial==4)
+```
+
+##Making Plots
+
+Next we will make several plots to help us understand the data. We will start with plotting mean foraging time against day. 
+
+```{r plots 1}
+plot(MeanForagingTime~Day,data=Trial1,type='o',ylim=c(0,60),ylab='Foraging Time (s)')
+lines(MeanForagingTime~Day,data=Trial2,type='o',col='blue')
+lines(MeanForagingTime~Day,data=Trial3,type='o',col='red')
+lines(MeanForagingTime~Day,data=Trial4,type='o',col='green')
+legend('topleft',legend=c('Trial1','Trial2','Trial3','Trial4'),lty=rep(1,4),pch=rep(1,4),col=c('black','blue','red','green'))
+```
+
+Now go ahead and make plots for Percent Starved, Percent Depredated, and Percent Survived
+
+```{r plots2, eval=F,echo=F}
+# plot(PStarved~Day,data=Trial1,type='o',ylim=c(0,1),ylab='Percent Starved')
+# lines(PStarved~Day,data=Trial2,type='o',col='blue')
+# lines(PStarved~Day,data=Trial3,type='o',col='red')
+# lines(PStarved~Day,data=Trial4,type='o',col='green')
+# legend('topleft',legend=c('Trial1','Trial2','Trial3','Trial4'),lty=rep(1,4),pch=rep(1,4),col=c('black','blue','red','green'))
+# 
+# plot(PDepredated~Day,data=Trial1,type='o',ylim=c(0,1),ylab='Percent Depredated')
+# lines(PDepredated~Day,data=Trial2,type='o',col='blue')
+# lines(PDepredated~Day,data=Trial3,type='o',col='red')
+# lines(PDepredated~Day,data=Trial4,type='o',col='green')
+# legend('topleft',legend=c('Trial1','Trial2','Trial3','Trial4'),lty=rep(1,4),pch=rep(1,4),col=c('black','blue','red','green'))
+# 
+# plot(PSurvived~Day,data=Trial1,type='o',ylim=c(0,1),ylab='Percent Survived')
+# lines(PSurvived~Day,data=Trial2,type='o',col='blue')
+# lines(PSurvived~Day,data=Trial3,type='o',col='red')
+# lines(PSurvived~Day,data=Trial4,type='o',col='green')
+# legend('bottomleft',legend=c('Trial1','Trial2','Trial3','Trial4'),lty=rep(1,4),pch=rep(1,4),col=c('black','blue','red','green'))
+```
 ##Asignment
-For the rest of the lab, you will be placed into groups. Each group will be assigned a question. It is up to your group to figure out how to analyze the data. Be sure to check in with me after you have some idea of how to analyze your question to make sure you are doing it right. At the end we will all come together and share our results. Also, I will have you send me your code for your question and compile them to be destributed to the class so everyone can see what you have done.
+For the rest of the lab, you will be placed into groups. Each group will be assigned a question. It is up to your group to figure out how to analyze the data. Be sure to check in with me after you have some idea of how to analyze your question to make sure you are doing it right. At the end we will all come together and share our results. Also, I will have you send me your code for your question and compile them to be distributed to the class so everyone can see what you have done.
 
 For your question, you will first need to figure out:
 1) What trials will you use?
@@ -193,84 +155,61 @@ For your question, you will first need to figure out:
 4) What figure can I make to show the results?
 5) Make a results statement for your findings. 
 
-Question 1 has been done for you. 
-###Question 1
-What was the effect of depleting resources on solitary foraging time?
+One final note, I have provided a function for you to run T-tests with this data if you need it, but you will have to figure out how it works.
 
-1) For this question we are only interested in solitary foraging time without predation (Trial 1).
-2) We will look at average foraging time
-3) Because we are comparing two means, we will use a t-test
-4) We will make a figure showing foraging time changing across time periods.
-```{r Quesiton 1 t-test}
+```{r t-test function}
 TTest<-function(m1,m2,SD1,SD2,N1,N2){
   t<-abs((m1-m2)/sqrt(SD1^2/N2+SD2^2/N1))
   df<-N1+N2-2
   p<-2*pt(t,df,lower.tail=F)
   Res<-data.frame(t,df,p)
   return(Res)
-}  #Make a funciton to run the t-test
-
-#grab the mean, SD, and N from trial 1. Use periods 1 and 2.
-P1P2<-TTest(Trial1$MeanTime[1],Trial1$MeanTime[2],Trial1$SD[1],Trial1$SD[2],Trial1$N[1],Trial1$N[2]) 
-P1P3<-TTest(Trial1$MeanTime[1],Trial1$MeanTime[3],Trial1$SD[1],Trial1$SD[3],Trial1$N[1],Trial1$N[3])
-P2P3<-TTest(Trial1$MeanTime[2],Trial1$MeanTime[3],Trial1$SD[2],Trial1$SD[3],Trial1$N[2],Trial1$N[3])
-P1P2;P1P3;P2P3 #show the results
+}
 ```
 
-We can see that they are all significantly different. Lets make a figure to help show how
 
-```{r Question 1 figure}
-plot(MeanTime~Day,data=Trial1,type='o',
-     xlab='Day',ylab='Mean Foraging Time')
+###Question 1
+What was the effect of depleting resources on solitary foraging time?
+
+
+```{r Quesiton 1 t-test, echo=F}
+Test12<-TTest(Trial1$MeanForagingTime[1],Trial1$MeanForagingTime[2],Trial1$StandardDeviation[1],Trial1$StandardDeviation[2],Trial1$N[1],Trial1$N[2])
+Test23<-TTest(Trial1$MeanForagingTime[2],Trial1$MeanForagingTime[3],Trial1$StandardDeviation[2],Trial1$StandardDeviation[3],Trial1$N[2],Trial1$N[3])
+Test13<-TTest(Trial1$MeanForagingTime[1],Trial1$MeanForagingTime[3],Trial1$StandardDeviation[1],Trial1$StandardDeviation[3],Trial1$N[1],Trial1$N[3])
 ```
 
-Then make a results statement.
+
 
 ###Question 2
-What is the effect of competition in foraging time
+What is the effect of competition in foraging time?
 
 ```{r Quesiton 2 worked, echo=F,eval=F}
-##Here we will compare trial 1 to trial 2 using t-tests on foraging time for each of the three time periods
+Test1<-TTest(Trial1$MeanForagingTime[1],Trial2$MeanForagingTime[1],Trial1$StandardDeviation[1],Trial2$StandardDeviation[1],Trial1$N[1],Trial2$N[1])
+Test2<-TTest(Trial1$MeanForagingTime[2],Trial2$MeanForagingTime[2],Trial1$StandardDeviation[2],Trial2$StandardDeviation[2],Trial1$N[2],Trial2$N[2])
+Test3<-TTest(Trial1$MeanForagingTime[3],Trial2$MeanForagingTime[3],Trial1$StandardDeviation[3],Trial2$StandardDeviation[3],Trial1$N[3],Trial2$N[3])
 
-P1<-TTest(Trial1$MeanTime[1],Trial2$MeanTime[1],Trial1$SD[1],Trial2$SD[1],Trial1$N[1],Trial2$N[1])
-P2<-TTest(Trial1$MeanTime[2],Trial2$MeanTime[2],Trial1$SD[2],Trial2$SD[2],Trial1$N[2],Trial2$N[2])
-P3<-TTest(Trial1$MeanTime[3],Trial2$MeanTime[3],Trial1$SD[3],Trial2$SD[3],Trial1$N[3],Trial2$N[3])
-
-
-##And make a plot o the two
-plot(MeanTime~Day,data=Trial1,type='o',
-     xlab='Day',ylab='Mean Foraging Time',ylim=c(0,60))
-points(MeanTime~Day,data=Trial2,type='o',col='red')
-legend('topleft',legend=c('Trial1','Trial2'),lty=1,pch=1,col=c('black','red'))
 ```
 
 ###Question 3
-What was the effect of predation on forager survivorship?
+What was the effect of depredation on forager survivorship?
 
 ```{r Quesiton 3 worked, echo=F,eval=F}
-##Here we will compare trial 1 and 3 with a chi-squared test
 Obs<-data.frame(Trial1$NSurvived,Trial3$NSurvived)
-Chi<-chisq.test(Obs)
-
-##And make a plot
-plot(PSurvived~Day,data=Trial1,type='o',
-     xlab='Day',ylab='Mean Foraging Time',ylim=c(0,1))
-points(PSurvived~Day,data=Trial3,type='o',col='red')
-legend('bottomleft',legend=c('Trial1','Trial3'),lty=1,pch=1,col=c('black','red'))
+Test<-chisq.test(Obs)
 ```
 
 ###Question 4
-Is flocking beneficial in terms of predation?
+Is flocking beneficial in terms of depredation?
 
 ```{r Quesiton 4 worked, echo=F,eval=F}
-##Here we will compare trial 3 and 4 with a chi-squared test
-Obs<-data.frame(Trial3$NDepredated,Trial4$NDepredated)
-Chi<-chisq.test(Obs)
-
-##And make a plot
-plot(PDepredated~Day,data=Trial3,type='o',
-     xlab='Day',ylab='Mean Foraging Time',ylim=c(0,1))
-points(PDepredated~Day,data=Trial4,type='o',col='red')
-legend('topleft',legend=c('Trial3','Trial4'),lty=1,pch=1,col=c('black','red'))
+Obs<-data.frame(Trial1$NSurvived,Trial3$NSurvived)
+Test<-chisq.test(Obs)
 ```
 
+###Question 5
+Is flocking beneficial overall?
+
+```{r Quesiton 5 worked, echo=F,eval=F}
+Obs<-data.frame(Trial3$NSurvived,Trial4$NSurvived)
+Test<-chisq.test(Obs)
+```
