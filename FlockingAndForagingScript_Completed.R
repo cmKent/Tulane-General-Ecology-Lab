@@ -6,7 +6,8 @@ Data<-read.csv('Data/FlockingAndForaging_Data.csv') #use the read.csv() file to 
   
   
 #Summary Statistics  
-library(tidyr);library(dplyr)
+install.packages(c('tidyr','dplyr')) #install packages
+library(tidyr);library(dplyr) #load packages
 SummaryData<-Data %>%
   group_by(Trial,Day) %>%
   summarise(MeanForagingTime=mean(ForagingTime,na.rm=T),

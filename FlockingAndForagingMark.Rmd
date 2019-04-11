@@ -34,10 +34,13 @@ What structure is the data in (i.e. numeric, factor, logical)?
 
 ##Calculating summary statistics
 
-Next we will calculate a series of summary statistics for each day of each trial. First we will find the average foraging time and its standard deviation, the total number of individuals participating, and the number starved or killed. To calculate the first round of these we will use something called piping. Here we will use to packages `dplyr` and `tidyr`. The special operation `%>%` tells R that we are going to pipe. Take some time to understand how this code works.
+Next we will calculate a series of summary statistics for each day of each trial. First we will find the average foraging time and its standard deviation, the total number of individuals participating, and the number starved or killed. 
+
+To calculate the first round of these we will use something called piping which is going to use two different "packages." A package is a bunch of code that provides new code that is not included in base R. Here we will use to packages `dplyr` and `tidyr`. That also means you will need to install the packages on your computer using the `instal.packages` function. After that you will need to load the packages using the `library` function. The special operation `%>%` tells R that we are going to pipe. Take some time to understand how this code works.
 
 
 ```{r summary stats 1, eval=FALSE}
+install.packages(c('tidyr','dplyr'))
 library(tidyr);library(dplyr) #load in the packages we need to pipe
 SummaryData<-Data %>% #make an object called SummaryData by using the object Data
   group_by(Trial,Day) %>% #group data by day, within trial
@@ -79,7 +82,7 @@ Now make sure to take a look at your data frame you have now made using `summary
 
 ##Organizing the data
 ###Limmiting the days of the data
-As we have discussed before, it is often hard to separate understand statics like chi-square or t-test results if you have too many categories. To help with this, we will only be using three days: one early (Day 3), one in the middle (Day 10), and one at the end (Day 17)
+As we have discussed before, it is often hard to understand statics like chi-square or t-test results if you have too many categories. To help with this, we will only be using three days: one early (Day 3), one in the middle (Day 10), and one at the end (Day 17)
 
 To accomplish this, subset the data frame using the `subset.data.frame()` function to limit the data to only these days. Remember that when writing logical statements, `==` means equal to and the `|` symbol means "or."
 
@@ -94,10 +97,11 @@ SummaryData<-subset.data.frame(SummaryData,SummaryData$Day==3 | SummaryData$Day=
 
 ```
 
-Make sure to look at each trial and be sure it still look good and make sense. If they do, we can move on.
+Make sure to look at your data and be sure it still look good and make sense. If it does, we can move on.
 
 ###Creating individual trials
-Next we will make a separate data frame for each trial. Here we will also use the `subset.data.frame` function. 
+Next we will make a separate data frame for each trial. Write the code to seperate the data into different trials. 
+
 ```{r subset trials 1,eval=F}
 Trial1<-
 Trial2<-
@@ -114,9 +118,15 @@ Trial4<-subset.data.frame(SummaryData,SummaryData$Trial==4)
 
 ##Making Plots
 
-Next we will make several plots to help us understand the data. We will start with plotting mean foraging time against day. 
+Next we will make several plots to help us understand the data. We will start with plotting mean foraging time against day. TO do this, you will need to:
 
-```{r plots 1}
+1) Use the `plot` function, and be sure to set the ylim from 0 to 60 and use proper axis labels
+2) Use the `lines` function to plot additoinal lines
+3) Use the `legend` function to make an appropriate legend
+
+Also, be sure that you make the different lines different colors and set type='o'. You should end up with a plot like the one below. 
+
+```{r plots 1, echo=F}
 plot(MeanForagingTime~Day,data=Trial1,type='o',ylim=c(0,60),ylab='Foraging Time (s)')
 lines(MeanForagingTime~Day,data=Trial2,type='o',col='blue')
 lines(MeanForagingTime~Day,data=Trial3,type='o',col='red')
@@ -149,10 +159,11 @@ Now go ahead and make plots for Percent Starved, Percent Depredated, and Percent
 For the rest of the lab, you will be placed into groups. Each group will be assigned a question. It is up to your group to figure out how to analyze the data. Be sure to check in with me after you have some idea of how to analyze your question to make sure you are doing it right. At the end we will all come together and share our results. Also, I will have you send me your code for your question and compile them to be distributed to the class so everyone can see what you have done.
 
 For your question, you will first need to figure out:
+
 1) What trials will you use?
 2) What variables will you test?
 3) What statistical test will you use to compare them?
-4) What figure can I make to show the results?
+4) Which figure can I use to show the results?
 5) Make a results statement for your findings. 
 
 One final note, I have provided a function for you to run T-tests with this data if you need it, but you will have to figure out how it works.
