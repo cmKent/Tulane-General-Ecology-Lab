@@ -6,6 +6,7 @@ Data<-  #load in the data
 
   
 #Summary Statistics  
+install.packages(c('tidyr','dplyr')) #install packages
 library(tidyr);library(dplyr) #load in the packages we need to pipe
 SummaryData<-Data %>% #make an object called SummaryData by using the object Data
   group_by(Trial,Day) %>% #group data by day, within trial
