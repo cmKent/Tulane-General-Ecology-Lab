@@ -32,4 +32,3 @@ Notes on teaching:
 		3) Sutdents should also save their _Student.R files and .html files in thie Ecology Lab_R folder as they recieve them
 
 Version Note: Everything ran properly as of 1/24/2019 using R version 3.5.1 (2018-07-02) -- "Feather Spray" 
-test
