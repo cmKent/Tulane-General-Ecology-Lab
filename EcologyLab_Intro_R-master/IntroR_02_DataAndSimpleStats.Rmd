@@ -1,0 +1,244 @@
+---
+title: 'Introduction to R: Working with data'
+author: Caz Taylor
+output: html_document
+---
+
+> ### Learning Objectives
+
+> * Load external data  into a data frame.
+> * t-tests to compare means
+> * contingency tables and chi-squared tests
+> * using  `plot`  to make simple box plots and scatter graphs
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval=TRUE)
+```
+
+
+
+## Getting data into R from a file
+Create a new script to do some analyses and visualization of the spider data. Start by reading the csv file into a `data.frame` called `spiders`
+
+#### Spiders Data
+
+The data we will use were from the Spiders Lab, collected in Fall 2018 by Ecology Students. I am assuming that all the students understand the data or have access to a description of the data. 
+
+The data were available in an excel spreadsheet. "Spider Data 2018_Raw.xlsx". The functions to read excel files into R are not reliable since excel uses propriety (not public) formats. So when we want to read data into R, we use simple text formats, usually `comma separated values` files (`csv`) . If there's time, students can create their own csv file from the excel spreadsheet (from the `corrected` worksheet) but the csv file is also provided. 
+
+Make a directory (folder) inside your project directory, called `data`. Put the file `Spider Data 2018.csv` in this directory.
+
+Use the `read.csv` function with the filename (that must include the pathname relative to the project (working) directory.  `read.csv` returns a data.frame which we put into an object called `spiders`
+```{r}
+spiders <- read.csv("./data/Spider Data 2018.csv")
+```
+
+Lets look at what the column (variable) names are and what types of vectors each column is
+```{r}
+str(spiders)
+```
+You will notice that read.csv automatically creates factors from anything that is not numeric. If you don't want this you can set the argument `stringsAsFactors = FALSE` when calling `read.csv`. In this case, we want the coulums to be factors.
+
+## Data cleaning,  processing and subsetting
+We will do a minimal amount of data cleaning. For example, we don't need to keep the `Notes` column around, so we delete it by setting it to NULL.
+```{r}
+spiders$Notes<-NULL
+```
+But we do want to create a new column that is the WebArea. The formula to calculate is $\pi r^2$ where $r$ is the radius of the web, estimated as half the mean diameter (Web.Diam.1+Web.Diam.2)/2.
+
+```{r}
+spiders$Web.Area<-pi*(((spiders$Web.Diam.1+spiders$Web.Diam.2)/2)/2)^2
+```
+
+
+>Challenge:  How many Species are there in the spiders data? How did you determine this?
+
+see how many observations of each spider species were made.
+```{r}
+summary(spiders$Spider.ID)
+
+```
+
+We are going to work with just the three most common species of spiders, so we create a new data.frame `common_spiders` that is a subset of the old one by using the subset function and then use subset again to create a different data.frame for each species. 
+
+Remember that the `==` means is it equal to? and the `|` means OR
+so we could use the  code  
+```{r, eval=FALSE}
+subset(spiders,Spider.ID == "Gasteracantha cancriformis" | Spider.ID =="Leucauge venusta" | Spider.ID =="Nephila clavipes")
+```
+to create a data.frame that only contains the rows where Spider.ID is equal to "Gasteracantha cancriformis" OR Spider.ID is equal to "Leucauge venusta" OR Spider.ID is equal to Nephila clavipes". Alternatively we can create a vector of the species names we want to keep and use  `%in%` i.e., 
+
+We can create a vector `keep_species` by typing out the names. 
+
+```{r,eval=FALSE}
+
+keep_species<-c("Gasteracantha cancriformis","Leucauge venusta" ,"Nephila clavipes")
+```
+
+But this is potentially prone to error. Why?
+
+A better way to create the `keep_species` vector is
+
+```{r}
+# create vector of number of observations of each spider species using the summary function
+species_counts<-summary(spiders$Spider.ID) 
+#We can use the names function to look at the names of all species
+names(species_counts)
+#but we want to keep the names of just those spedies with more than or equal to ten observations, so we use a logical operator to take a subset of these
+keep_species<-names(species_counts[species_counts>=10])
+keep_species
+```
+
+>Note though that this code could cause problems if there were more than 10 observations labeled "unknown"
+
+Now we can use `%in%` to create a subset of the spiders data.frame with only the common species. 
+
+
+```{r}
+common_spiders<-subset(spiders,Spider.ID %in% keep_species)
+
+#Also create subsets with single species
+Gasteracantha<-subset(spiders,Spider.ID==keep_species[1])
+Leucauge<-subset(spiders,Spider.ID==keep_species[2])
+Nephila<-subset(spiders,Spider.ID==keep_species[3])
+```
+
+
+If we look at the summary of the Spider.ID colum in our new data.frame `common_spiders`, we see that all the other spiders are now zero observations.
+```{r}
+summary(common_spiders$Spider.ID)
+```
+
+However, the `subset` function does not remove the other `levels` from the Spider.ID factor in the common_spiders data.frame and so to do that, we re-create the column from the old one as a factor with just the 3 levels we want.
+
+```{r}
+common_spiders$Spider.ID<-factor(common_spiders$Spider.ID,levels=keep_species)
+summary(common_spiders$Spider.ID)
+
+```
+
+
+## Summary statistics
+Possible functions to generate summary statistics include `mean`, `sd`, `var`, `min`, `max`, `median`, `range`, and `quantile`. These operate on `vectors`. Remember each column of a data.frame is a vector. If there are `NA`s (missing values) in the data, you need to remove them by setting the `na.rm` argument to `TRUE`.
+
+```{r}
+mean(common_spiders$Web.Area,na.rm=TRUE)
+```
+
+Determine the mean and standard deviation of Body Length for each common spider species. (use `mean` and `sd` functions on the `Body.Length` column) 
+
+
+## Visualize data: Simple plotting
+
+### Box plot  
+The `plot(x,y)` function does different things depending on what kind of data you provide. With a `factor` as the x value and a `numeric vector` as the y value, it makes a boxplot. 
+```{r}
+plot(common_spiders$Spider.ID,common_spiders$Body.Length)
+```
+
+>In base R,  fixing things like the species names are too long to show as labels in the x-axis is possible but can be surprising difficult. If you are planning to use R for publication or presentation quality graphs, it is suggested that you learn about the add-on package `ggplot2` to make graphs.
+
+### Scatter Plot
+With two numeric vectors, `plot` makes a scatter plot. 
+
+```{r}
+plot(Gasteracantha$Body.Length,Gasteracantha$Web.Area)
+```
+
+The look of the graph, including point types, sizes, color, axis limits, and labels are given default values by R. The `plot` function has a lot of different (optional arguments) to set these to your own preferences
+
+pch sets the type of point. e.g., `pch=19` will set the type of point to a filled circle  The different available point types are described in the help section for `points`, type `?points` in the console window to see them.
+
+`col` and `bg` sets the color of the points. There are various ways to specify a color in R. Here we will use named colors, e.g. `col="red"` . For point types with an outline and a fill color, `col` sets the outline color and `bg` (background) sets the fill color.For point types that have no outline, `col` will set the color
+
+>Note: R has a large list (>650) of named colors available. If you type `colors()` into the console window you will get them all.
+
+We also set the limits of the x and y axes as 2 element vectors specifying the lower,upper limit of the axis, e.g.,  `xlim =c(0,10)`, `ylim =c(-100,100)`. 
+
+
+Axis Labels are set using `xlab` and `ylab`, e.g., `xlab="Body Length in mm"`.  `main` sets the title of the plot. e.g.,  `main ="Web Area versus Body size" `
+
+We can make separate graphs for  our species. Each time we call `plot` it creates a new set of axes (a new graph)
+
+```{r}
+plot(Gasteracantha$Body.Length,Gasteracantha$Web.Area,pch=19,col="red")
+
+plot(Nephila$Body.Length,Nephila$Web.Area,col="blue",pch=19)
+```
+
+If we want to put multiple sets on the same graph, we can plot one species and then add the second group of points to the same graph using the `points` function
+```{r}
+plot(Gasteracantha$Body.Length,Gasteracantha$Web.Area,pch=19,col="red")
+
+points(Nephila$Body.Length,Nephila$Web.Area,col="blue",pch=19)
+```
+
+But no blue points showed up! What did we do wrong?
+
+Hint: The code below fixes the problem of missing data points and it has to do with the scale of the x-axes
+
+```{r}
+
+plot(Gasteracantha$Body.Length,Gasteracantha$Web.Area,col="red",pch=19,xlim=range(common_spiders$Body.Length,na.rm=TRUE),ylim=range(common_spiders$Web.Area,na.rm=TRUE))
+
+points(Nephila$Body.Length,Nephila$Web.Area,col="blue",pch=19)
+
+```
+
+We fixed it by setting the `xlim` and `ylim` arguments in the `plot` function to the full range of all spiders in the `common_spiders` data.frame.
+
+>Challenge: Now add the points from the third species to the graph (remember to put the points in a differnt color) and add axis labels and titles.
+
+## Simple Statistical tests
+
+### t-tests
+The `t.test` function produces a variety of t-tests. Unlike most statistical packages, in R, the default assumes unequal variance and applies the Welsh df modification.
+
+```{r, eval=FALSE}
+
+# independent 2-group t-test
+t.test(y~x) # where y is numeric and x is a binary factor
+
+# independent 2-group t-test
+t.test(y1,y2) # where y1 and y2 are numeric
+
+# paired t-test
+t.test(y1,y2,paired=TRUE) # where y1 & y2 are numeric
+
+# one sample t-test
+t.test(y,mu=3) # Ho: mu=3
+
+```
+
+You can use the var.equal = TRUE option to specify equal variances and a pooled variance estimate. You can use the alternative="less" or alternative="greater" option to specify a one tailed test.
+
+Here I use the independent 2-group t-test assuming unequal variances to test whether Body Length of Nephila is significantly larger or smaller than Leucauge.
+
+```{r}
+t.test(Leucauge$Body.Length,Nephila$Body.Length)
+```
+
+
+
+>Challenge: Use a t-test to determine if   two differnt species build significantly larger or smaller webs than each other.
+
+
+## Contingency Tables and chi-squared tests
+A contingency table tallies one factor against another. For example, the presence (p) or absence (a) of Stabilimentum may vary among species
+```{r}
+tbl<-table(common_spiders$Spider.ID, common_spiders$Stabilimentum)
+print(tbl)
+```
+
+A chi-squared test tests whether one variable is independent of the other, is is the presence or absence of Stabilimentum (web decoration) different among species. 
+```{r}
+chisq.test(tbl)
+```
+If the p-value is low, we reject the null hypotheses that presence/absence of stabilimentum is independent of species.
+
+The warning message found in the solution above is due to the small cell values in the contingency table. 
+
+
+
+
