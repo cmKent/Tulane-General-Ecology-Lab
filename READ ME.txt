@@ -1,6 +1,8 @@
 This folder contains scripts, data, and R markdown folders for the Tulane General Ecology labs. These labs will not make sense without the lab manual.
 Plese be careful if you replace any of the files. See IMPORTANT!! below for details. 
 
+Additionally, there is a verson controled copy of this lab material current as of Fall 2019 avaialble at: https://github.com/cmKent/Tulane-General-Ecology-Lab
+
 Description of Files:
 	For each lab there are 5 files. These include: 
 		1) An .html file for the lab to provide instruction for students generated from R markdown 
