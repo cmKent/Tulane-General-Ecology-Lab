@@ -23,6 +23,9 @@ str(Data) #use the structure function to look at what kind of data was generated
 
 Data$Web.Area <-pi*(()/2/2)^2 #What formula would you use to calculate web area?
 
+#Also, there is a chance that some data for web angle could have entered the obtuse, instead of accute angle. Lets correct this.
+Data$Orientation[Data$Orientation>90]=180-Data$Orientation[Data$Orientation>90]
+
 #If we use the summary() function we can see how many individuals there are of each species
 summary(Data$Spider.ID)
 #For our purpuses, lets use only the species where we measured more than 10 indiviudals

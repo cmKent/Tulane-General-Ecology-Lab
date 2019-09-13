@@ -1,7 +1,7 @@
 ---
-title: "Spiders and Niche Partitioning"
+title: "SpiderLabMark.Rmd"
 author: "Cody M Kent"
-date: "January 15, 2019"
+date: "9/13/2019"
 output: html_document
 ---
 
@@ -39,7 +39,12 @@ Some of the formula is provided. Fix the formula so it will compute web area
 ```{r Calculate web area,eval=F}
 Data$Web.Area<-pi*((InsertHere)/2/2)^2
 ```
+###Correcting web orientation
+It is possible that some students may have listed the obtuse angle instead of the accute angle. Lets fix this quick.
 
+```{r correct web orientation}
+Data$Orientation[Data$Orientation>90]=180-Data$Orientation[Data$Orientation>90]
+```
 ###Removing uncommon species
 Also, we have several spider species sin the data where we only measured a couple individuals. If we only have a few data points, then we cannot really use them to test statistical hypothesis. We can use the `summary()` function to see how many individuals were sampled for each species. 
 
