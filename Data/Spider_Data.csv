@@ -48,7 +48,6 @@ Index,Lab,Group,Plot,Spider ID,Body Length,Web Height,Web Diam 1,Web Diam 2,Stra
 47,Wednesday,Sophia et al.,1,Nephila clavipes,40,230,115,99,11,394,80,a,f,small prey
 48,Wednesday,Sophia et al.,1,Leucauge venusta,7,42,40,8,6,16,10,a,c,small prey + damage
 49,Wednesday,Sophia et al.,1,Leucauge venusta,15,66,25,22,18,40,50,a,c,
-50,Wednesday,Sophia et al.,1,Nephila clavipes,45,,,,,,,,,web too highto measure 
 51,Wednesday,Sophia et al.,1,Gasteracantha cancriformis,7,100,38,37,12,28,89,a,c,stabilimentum on edge?
 52,Wednesday,Sophia et al.,2,Leucauge venusta,10,58,30,46,16,44,70,a,c,2 webs in close proximity only 1 spider
 53,Wednesday,Sophia et al.,2,Gasteracantha cancriformis,5,61,44,39.5,17,42,85,a,m,
@@ -113,7 +112,6 @@ Index,Lab,Group,Plot,Spider ID,Body Length,Web Height,Web Diam 1,Web Diam 2,Stra
 112,Tuesday,1,1,Leucauge venusta,7,178,275,53,13,14,50,a,c,"prey, damage"
 113,Tuesday,1,2,Verrucosa arenata,6,16,58,17,6,38,60,a,c,prey
 114,Tuesday,1,2,Verrucosa arenata,9,17,57,13,11,9,20,a,c,"prey, damage"
-115,Tuesday,1,2,Argiope aurantia,20,95,56,32,8,30,88,a,,"prey, damage"
 116,Tuesday,1,3,Leucauge venusta,8,57,52,26,11,15,45,a,c,damage
 117,Tuesday,1,3,Leucauge venusta,3,212,38,15,14,15,70,a,c,
 118,Tuesday,1,3,Gasteracantha cancriformis,10,174,130,60,3,9,80,a,m,damage

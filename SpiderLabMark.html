@@ -398,11 +398,11 @@ str(Data)</code></pre>
 <p>###Removing uncommon species Also, we have several spider species sin the data where we only measured a couple individuals. If we only have a few data points, then we cannot really use them to test statistical hypothesis. We can use the <code>summary()</code> function to see how many individuals were sampled for each species.</p>
 <pre class="r"><code>summary(Data$Spider.ID)</code></pre>
 <pre><code>##           Argiope aurantia                      Empty 
-##                          3                          1 
+##                          2                          1 
 ## Gasteracantha cancriformis           Leucauge venusta 
 ##                         28                         70 
 ##      Neoscona domiciliorum           Nephila clavipes 
-##                          2                         20 
+##                          2                         19 
 ##                    Unknown                   Unknown  
 ##                          1                          1 
 ##          Verrucosa arenata 
@@ -416,7 +416,7 @@ summary(Data$Spider.ID)</code></pre>
 ## Gasteracantha cancriformis           Leucauge venusta 
 ##                         28                         70 
 ##      Neoscona domiciliorum           Nephila clavipes 
-##                          0                         20 
+##                          0                         19 
 ##                    Unknown                   Unknown  
 ##                          0                          0 
 ##          Verrucosa arenata 
@@ -427,7 +427,7 @@ summary(Data$Spider.ID)</code></pre>
 <pre><code>## Gasteracantha cancriformis           Leucauge venusta 
 ##                         28                         70 
 ##           Nephila clavipes 
-##                         20</code></pre>
+##                         19</code></pre>
 <p>Now that we have the data fully loaded and cleaned, we can begin running the statistical analysis.</p>
 <p>##T-tests ###Seperating data into different spider species For the next step of analysis, it will be easier to create subsets of the data for each species. We can do that by using the <code>subset()</code> function</p>
 <pre class="r"><code>GC&lt;-subset.data.frame(Data,Data$Spider.ID==&#39;Gasteracantha cancriformis&#39;)
@@ -468,10 +468,18 @@ TTest(LV$Web.Height,NC$Web.Height)</code></pre>
 <pre class="r"><code>Observed&lt;-table(Data$Spider.ID,Data$Substrate)
 Observed</code></pre>
 <pre><code>##                             
-##                                  c  f  m
-##   Gasteracantha cancriformis  0  3  8 17
-##   Leucauge venusta            0 53  0 17
-##   Nephila clavipes            1  1 10  8</code></pre>
+##                               c  f  m
+##   Gasteracantha cancriformis  3  8 17
+##   Leucauge venusta           53  0 17
+##   Nephila clavipes            1 10  8</code></pre>
+<p>You may have a column with no title that contains missing data. If so, remove it now</p>
+<pre class="r"><code>Observed&lt;-Observed
+Observed</code></pre>
+<pre><code>##                             
+##                               c  f  m
+##   Gasteracantha cancriformis  3  8 17
+##   Leucauge venusta           53  0 17
+##   Nephila clavipes            1 10  8</code></pre>
 <p>Now we can run the chi-square test. To do this we will use the <code>chisq.test()</code> function</p>
 <pre class="r"><code>Test&lt;-chisq.test(Observed)</code></pre>
 <pre><code>## Warning in chisq.test(Observed): Chi-squared approximation may be incorrect</code></pre>
@@ -480,21 +488,21 @@ Observed</code></pre>
 ##  Pearson&#39;s Chi-squared test
 ## 
 ## data:  Observed
-## X-squared = 69.092, df = 6, p-value = 6.277e-13</code></pre>
+## X-squared = 64.842, df = 4, p-value = 2.779e-13</code></pre>
 <p>You may receive a warning about the approximation being incorrect. That is OK for this lab, but it means that some of our sample sizes might have been too small.</p>
 <p>###Interpeting the test Now that you ran a test and found it to be significant,you need to interpret the results. Remember that on a chi-square test you can’t just compare the observed frequencies. Instead, you must compare the observed frequencies to the expected frequencies. We can pull these out of the variable we named “Test.”</p>
 <pre class="r"><code>Test$observed</code></pre>
 <pre><code>##                             
-##                                  c  f  m
-##   Gasteracantha cancriformis  0  3  8 17
-##   Leucauge venusta            0 53  0 17
-##   Nephila clavipes            1  1 10  8</code></pre>
+##                               c  f  m
+##   Gasteracantha cancriformis  3  8 17
+##   Leucauge venusta           53  0 17
+##   Nephila clavipes            1 10  8</code></pre>
 <pre class="r"><code>Test$expected</code></pre>
 <pre><code>##                             
-##                                                c         f         m
-##   Gasteracantha cancriformis 0.2372881 13.525424  4.271186  9.966102
-##   Leucauge venusta           0.5932203 33.813559 10.677966 24.915254
-##   Nephila clavipes           0.1694915  9.661017  3.050847  7.118644</code></pre>
+##                                     c         f         m
+##   Gasteracantha cancriformis 13.64103  4.307692 10.051282
+##   Leucauge venusta           34.10256 10.769231 25.128205
+##   Nephila clavipes            9.25641  2.923077  6.820513</code></pre>
 <p>Notice how the observed values you get here match the ones you calculated before. Now, how do the observed and expected values differ from each other? What is your overall interpretation of these results?</p>
 
 
