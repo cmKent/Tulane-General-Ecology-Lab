@@ -161,6 +161,14 @@ First we need to generate a table of observed frequencies. It should have column
 Observed<-table(Data$Spider.ID,Data$Substrate)
 Observed
 ```
+
+You may have a column with no title that contains missing data. If so, remove it now
+
+```{r remove blanks}
+Observed<-Observed[,-1]
+Observed
+```
+
 Now we can run the chi-square test. To do this we will use the `chisq.test()` function
 
 ```{r Chi-square test}

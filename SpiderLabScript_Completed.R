@@ -134,8 +134,9 @@ boxplot(Data$Web.Area~Data$Spider.ID,xlab='Spider species',ylab='Web Area (cm^2)
 #Here we will do a chi-square test on web placement
 
 Observed<-table(Data$Spider.ID,Data$Substrate)#make a table of frequencies
+Observed #If you look, there is one extra column for missing data. Lets remove that
 
-Observed<-Observed
+Observed<-Observed[,-1]
 Observed
 
 Test=chisq.test(Observed) #Now lets run the test
