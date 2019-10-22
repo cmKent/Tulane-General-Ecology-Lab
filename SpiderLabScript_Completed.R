@@ -135,6 +135,7 @@ boxplot(Data$Web.Area~Data$Spider.ID,xlab='Spider species',ylab='Web Area (cm^2)
 
 Observed<-table(Data$Spider.ID,Data$Substrate)#make a table of frequencies
 Observed 
+
 Test=chisq.test(Observed) #Now lets run the test
 Test
 

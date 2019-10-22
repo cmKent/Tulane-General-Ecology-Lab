@@ -24,6 +24,14 @@ PrestonData$BH<-rep(NA)#Add some emtpy data for the bayhead habitat
 PrestonData$Name<-paste(PrestonData$Min,PrestonData$Max,sep='-') #Add a name for each bin
 PrestonData
 
+#Make function to count the number of species in each bin
+count.bin<-function(X,Min,Max){
+  Number<-sum(X>Min & X<Max) #Count the number of cases where X is greater than the min and less than the max
+  Number<-Number+sum(X==Min)/2 #Add in the number of cases where X is equal to the minimum devided by two
+  Number<-Number+sum(X==Max)/2 #do the same thing for X equals the maximum
+  return(Number) #return the total number
+}
+
 #Calcualte the number of species in each habitat at each bin
 for(r in 1:nrow(PrestonData)){
   PrestonData$LL[r]<-count.bin(X=LL$Count,Min=PrestonData$Min[r],Max = PrestonData$Max[r]) #calculate the number of species in the bin for each row (r) of the data frame
